@@ -1,17 +1,47 @@
 import React from 'react';
 import Posts from './posts';
 
+const setUp = (props) => shallow(<Posts {...props} />);
+
 describe('Posts component', () => {
+	const DEFAULT_PAGE = 10;
+	let component;
+	let instance;
+
+	beforeEach(() => {
+		component = setUp();
+		instance = component.instance();	// у shallow, render/ mount есть метод instance, который возвращает экземпляр компонеты, чтобы например вызывать методы и тд
+	})
+
+
 	it('should render Post component', () => {
-		// помимо shallow есть ещё и mount (отрисует как сам компенент, так и дочерние) - нужет для тестирования жизненного цикла
-		// и render - тоже отрисует все дочерние, нужен для тестов разметки
-		const component = render(<Posts />);
-		expect(component).toMatchSnapshot();	// создаст снимок компонента
-		// создастся папка __snapshots__ в которой будет разметка компонента (важно чтобы там не было undefined, в случае если будет нужны моковые данные)
-		// после создания снимка, если мы изменим оригинальный компонент Posts, например добавим новый код
-		// Тест выдаст ошибку, так как компонент уже не совпадает со снимком
-		// И если изменение было запланированным, то мы просто запускаеи команду npm run test -- -u
-		// где -u это обновление 
-		// Если же на запланированное, то удалим код
+		expect(component).toMatchSnapshot();
+	})
+
+
+	describe('Posts handlers', () => {
+		it('should handle search input value', () => {
+			expect(component.state().searchQuery).toBe('');
+			instance.handleInputChange({ target: { value: 'test' }});
+			expect(component.state().searchQuery).toBe('test');
+		})
+
+		it('should handle change hits per page', () => {
+			expect(component.state().hitsPerPage).toBe(20);
+			instance.handleHitsChange({ target: { value: String(DEFAULT_PAGE) }});
+			expect(component.state().hitsPerPage).toBe(DEFAULT_PAGE);
+		})
+
+		it('should handle change page if Enter clicked', () => {
+			instance.setState({ page: DEFAULT_PAGE })
+			instance.getSearch({ key: 'Enter'});
+			expect(component.state().page).toBe(0);
+		})
+
+		it('should not change page if any button is clicked', () => {
+			instance.setState({ page: DEFAULT_PAGE })
+			instance.getSearch({ key: 'a'});
+			expect(component.state().page).toBe(DEFAULT_PAGE);
+		})
 	})
 })
